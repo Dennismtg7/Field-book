@@ -126,7 +126,11 @@ import { createFieldBookWorkbook } from "./excel-export.js";
   const metaGrid = document.getElementById("meta-grid");
   const saveMsgEl = document.getElementById("save-msg");
   const activeProjectEl = document.getElementById("active-project");
-  const userEmailEl = document.getElementById("user-email");
+  const profileMenu = document.getElementById("profile-menu");
+  const profileButton = document.getElementById("btn-profile");
+  const profileInitial = document.getElementById("profile-initial");
+  const profileDropdown = document.getElementById("profile-dropdown");
+  const profileEmail = document.getElementById("profile-email");
   const syncStatusEl = document.getElementById("sync-status");
   const btnSignin = document.getElementById("btn-signin");
   const btnSignout = document.getElementById("btn-signout");
@@ -654,7 +658,46 @@ import { createFieldBookWorkbook } from "./excel-export.js";
     return "Something went wrong. Please try again.";
   }
 
-  btnSignout.addEventListener("click", () => signOut(auth));
+  function closeProfileDropdown(returnFocus = false) {
+    profileDropdown.hidden = true;
+    profileDropdown.style.left = "";
+    profileDropdown.style.right = "";
+    profileButton.setAttribute("aria-expanded", "false");
+    if (returnFocus) profileButton.focus();
+  }
+
+  profileButton.addEventListener("click", () => {
+    if (!profileDropdown.hidden) {
+      closeProfileDropdown();
+      return;
+    }
+
+    profileDropdown.hidden = false;
+    profileDropdown.style.left = "0";
+    profileDropdown.style.right = "auto";
+    if (profileDropdown.getBoundingClientRect().right > window.innerWidth - 16) {
+      profileDropdown.style.left = "auto";
+      profileDropdown.style.right = "0";
+    }
+    profileButton.setAttribute("aria-expanded", "true");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!profileMenu.contains(event.target)) closeProfileDropdown();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !profileDropdown.hidden) closeProfileDropdown(true);
+  });
+
+  btnSignout.addEventListener("click", async () => {
+    closeProfileDropdown();
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("sign out failed", error);
+    }
+  });
 
   // ---------- boot: start in guest mode immediately, no waiting on auth ----------
   const guestCurrent = guestLoadCurrent();
@@ -685,7 +728,10 @@ import { createFieldBookWorkbook } from "./excel-export.js";
       const local = guestLoadCurrent();
       sheet = local || blankSheet();
       refreshGuestSavedList();
-      userEmailEl.textContent = "";
+      profileInitial.textContent = "";
+      profileEmail.textContent = "";
+      profileButton.hidden = true;
+      closeProfileDropdown();
       btnSignout.hidden = true;
       btnSignin.hidden = false;
       authOverlay.hidden = true;
@@ -699,7 +745,13 @@ import { createFieldBookWorkbook } from "./excel-export.js";
 
     pendingUnverifiedUser = null;
     currentUid = user.uid;
-    userEmailEl.textContent = user.email || "";
+    const email = user.email || "";
+    const ownerName = email.split("@")[0];
+    profileInitial.textContent = ownerName.charAt(0).toUpperCase() || "?";
+    profileEmail.textContent = email;
+    profileButton.setAttribute("aria-label", email ? `Open profile for ${email}` : "Open profile");
+    profileButton.hidden = false;
+    closeProfileDropdown();
     btnSignout.hidden = false;
     btnSignin.hidden = true;
     authOverlay.hidden = true;

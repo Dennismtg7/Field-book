@@ -1,4 +1,4 @@
-const CACHE_NAME = "field-book-v7";
+const CACHE_NAME = "field-book-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
