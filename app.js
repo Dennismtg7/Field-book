@@ -23,6 +23,7 @@ import {
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
+import { createFieldBookWorkbook } from "./excel-export.js";
 
 (() => {
   "use strict";
@@ -319,6 +320,23 @@ import { firebaseConfig } from "./firebase-config.js";
     sheet.rows.push(emptyRow());
     renderRows();
     scheduleSave();
+  });
+
+  document.getElementById("btn-export-excel").addEventListener("click", () => {
+    const computedRows = computeRows(sheet.rows, sheet.startRL).rows;
+    const workbook = createFieldBookWorkbook(sheet, computedRows);
+    const blob = new Blob([workbook], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const name = savedList.find((project) => project.id === currentProjectId)?.name
+      || (sheet.fromPoint ? `${sheet.fromPoint}_${sheet.date || "undated"}` : `FieldBook_${new Date().toISOString().slice(0, 10)}`);
+    const safeName = name.replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").trim() || "FieldBook";
+    link.href = url;
+    link.download = `${safeName}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
   document.getElementById("btn-new").addEventListener("click", () => {

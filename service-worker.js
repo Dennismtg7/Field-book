@@ -1,9 +1,10 @@
-const CACHE_NAME = "field-book-v5";
+const CACHE_NAME = "field-book-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./excel-export.js",
   "./firebase-config.js",
   "./manifest.json",
   "./icons/icon-192.png",
